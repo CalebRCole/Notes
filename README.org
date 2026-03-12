@@ -1,0 +1,7 @@
+* About
+
+This repository serves as a hub for various different notes and research I've done or am doing. Mostly for the purpose of preservation and ease of access across devices.
+
+** SICP
+
+This file serves as my notes and exercises made reading the book SICP, or the Structure and Interpretation of Computer Programs. Refer to the "About" section of sicp.org for more information.
