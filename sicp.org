@@ -260,6 +260,17 @@ There exists another special form similar to cond called "if", which operates ve
 
 Several logical operators exist as special forms, including "and", "or", and "not", which evaluate if a whole list of arguments are true, if any arguments are true, or if the expression evaluates to false respectively, all returning true respectively is so, and false otherwise. 
 
+*** Example: Square Roots by Newton's Method
+
+Procedures are much like ordinary math functions, specifying values determined by one or more parameters. There is, however, an important difference in that procedures must be effective. For example, square root functions can be defined as:
+
+sqrt(x) = the y such that y >= 0 and y^2 = x
+
+This serves as a definition of a relation between two expressions that give meaning to square roots. However, this does not provide how to actually find a square root. Thus, the difference between a function and a procedure is a reflection between describing the what is, and the how to, or rather, distinction between declarative and imperative knowledge.
+
+The most common way to compute square roots is to use Newton's method of successive approximations, which says that whenever we have a guess y for the value of the square root of a number x, we can perform a simple manipulation to get a better guess by averaging y with x/y.
+
+
 ** Exercises
 
 *** Conditional Expressions and Predicates
@@ -387,3 +398,26 @@ Then he evaluates the expression
 
 
  
+When using applicative-order evaluation, the expression breaks down to:
+
+#+begin_src racket
+  (test 0 (p))
+  (if (= x 0)
+      0
+      (p))
+
+  = (p)
+#+end_src
+
+While using normal-order evaluation:
+
+#+begin_src racket
+  (test 0 (p))
+  (if (= 0 0)
+      0
+      (p))
+
+  = 0
+#+end_src
+
+The core difference is that in normal-order evaluation, (p) is not evaluated at all and thus the function returns with the correct value of 0, whereas in applicative-order evaluation, (p) must be expanded before the predicate can be evaluated, but since (p) evaluates to (p), this creates an infinite recursion failure.
