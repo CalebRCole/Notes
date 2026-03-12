@@ -1,0 +1,6 @@
+# Only accepting plaintext or markdown files.
+*
+!*/
+!*.org
+!*.md
+!*.txt
