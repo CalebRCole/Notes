@@ -1,10 +1,14 @@
+#+PROPERTY: header-args:racket :prologue "#lang sicp\n"
+
 * About
 
-This document contains my study notes and exercises over the book [[info:sicp#Top][SICP]], or the Structure and Interpretation of Computer Programs by Harold Abelson and Gerald Jay Sussman with Julie Sussman, Second Edition.
+This document contains my study notes and exercises over the book [[info:sicp#Top][SICP2e]], or the Structure and Interpretation of Computer Programs by Harold Abelson and Gerald Jay Sussman with Julie Sussman, Second Edition.
 
 ** Note about this document
 
 This document makes use of Racket to replicate the original MIT Scheme as there is a compatible mode to access MIT Scheme within it. When the source code blocks are evaluated, their results are printed below the relevant block. The intended way to engage is to use the MELPA SICP package to provide a TeXInfo source file to read the original book directly inside of Emacs. Links to the relevant section of the TeXInfo file are included in the Org file.
+
+In "Notes" sections, most of the writing is either copied or shortened from the original text, with sections of the book separated by different subheadings. In "Summary" sections, the information of the chapter is summarized to condense useful knowledge into a shorter segment. It's recommended to read both the full text and the summarized version. In "Exercise" sections, exercises are separated into their respective sections from the original book.
 
 ** About SICP
 
@@ -91,4 +95,295 @@ SICP has been influential in computer science education, and several later books
     - Structure and Interpretation of Classical Mechanics (SICM), another book that uses Scheme as an instructional element, by Gerald Jay Sussman and Jack Wisdom
     - Software Design for Flexibility, by Chris Hanson and Gerald Jay Sussman
     - How to Design Programs (HtDP), which intends to be a more accessible book for introductory Computer Science, and to address perceived deficiencies in SICP
-    - Essentials of Programming Languages (EoPL), a book for Programming Languages courses
+    - Essentials of Programming Languages (EoPL), a book for Programming Languages course
+
+      
+* Chapter 1: Building Abstractions with Procedures
+
+** Notes
+
+Programming languages not only instruct computers, but are frameworks with which we organize our ideas about processes. When we describe a language, we should pay attention to the means the language provides for combining simple ideas to form more complex ideas. Every powerful language has three mechanisms for accomplishing this:
+
+- "Primitive Expressions"
+  The simplest entities the language is concerned with,
+
+- "Means of Combination"
+  Which compound elements are built from simpler ones,
+
+- "Means of Abstraction"
+  Which compound elements can be named and manipulated as units.
+
+There are two kinds of elements we deal with in programming: procedures and data (which are not really so distinct). Data is "stuff" we want to manipulate while procedures are descriptions of the rules for manipulating data. Any powerful programming language should be able to describe primitive data and procedures along with methods for combining and abstracting procedures and data.
+
+*** Expressions
+
+One kind of primitive expression is a number. Expressions representing numbers may be combined with an expression representing a primitive procedure (i.e. '+', '*', etc.) to form a compound expression representing the application of the procedure to those numbers. For example:
+
+#+begin_src racket
+  (+ 137 349)
+#+end_src
+
+#+RESULTS:
+: 486
+
+Note: In Lisp and its dialects, reverse Polish notation is used, with the leading operator meaning it is applied to all members of the list.
+
+(+ 1 2 3) = 1 + 2 + 3
+
+Expressions formed by delimiting a list of expressions within parentheses to denote procedure application are called "combinations". All members of a list besides the operator are denoted as operands. The benefit of following this sort of notation is that it allows for an arbitrary number of arguments without ambiguity. Another advantage is that it allows simple nesting of operations without limit.
+
+#+begin_src racket
+  (+ (* 3 5) (- 10 6))
+#+end_src
+
+#+RESULTS:
+: 19
+
+*** Naming and the Environment
+
+A critical aspect of a programming language is the means it provides for using names to refer to computational objects, or in other words, a name identifies a variable whose value is the object. In the Lisp dialect Scheme, we name things with "define".
+
+#+begin_src racket
+  (define size 2)
+
+  size
+#+end_src
+
+#+RESULTS:
+: 2
+
+#+begin_src racket
+  (define size 2)
+
+  (* 5 size)
+#+end_src
+
+#+RESULTS:
+: 10
+
+Define is Scheme's simplest means of abstraction, allowing simple names to refer to the results of compound operations.
+
+*** Evaluating Combinations
+
+In evaluating combinations, the interpreter must follow a procedure:
+
+1. Evaluate the sub-expressions of the combination,
+2. Apply the procedure that is the value of the the operator to the arguments that are the values of the  the operands.
+
+The first step dictates that to evaluate a combinations, we must first evaluate the first element of a combination. The process is recursive in nature. Thus, we must stipulate that the values of numerals are the numbers they name, and that the values of other names are the objects associated with those names, especially built-in operators being assigned to the machine instructions that carry out the corresponding operations. It would be meaningless to evaluate '(+ x 1)' without a meaning for '+' or 'x'.
+
+Some evaluations are considered "special forms" and deviate from standard rules, such as "define", which can only take two arguments ((define x 1) only takes arguments 'x' and '1'), making it not a combination. Each special form has its own evaluation rule, with the various kinds of expressions and their associated evaluations rule constituting the syntax of the programming language. This makes Lisp have very simple syntax; that is, the evaluation rule for expressions can be described by a simple general rule together with specialized rules for a small number of special forms. Special syntactic forms that are simply convenient alternative surface structures for things that can be written in more uniform ways are sometimes called "syntactic sugar". Lisp is easy to change surface syntax is is thus less concerned with matters of syntax.
+
+*** Compound Procedures
+
+Procedure definitions are a powerful abstraction technique by which a compound operation can be given a name and then referred to as a unit. For example, the procedure of "squaring" can be defined as, "To square something, multiply it by itself."
+
+#+begin_src racket
+  (define (square x) (* x x))
+#+end_src
+
+This is a "compound procedure" that is given the name "square". The general for of a procedure definition is:
+
+(define (<NAME> <FORMAL PARAMETERS>) <BODY>)
+
+<NAME> is a symbol to be associated with the procedure definition in the environment. <FORMAL PARAMETERS> are the names used within the body of the procedure to refer to the corresponding arguments of the procedure. <BODY> is an expression that will yield the value of the procedure application when the formal parameters are replaced by the actual arguments to which the procedure is applied. <NAME> and <FORMAL PARAMETERS> are grouped within parentheses like they would be in an actual call to the procedure being defined.
+
+#+begin_src racket
+  (define (square x) (* x x))
+
+  (square (square 3))
+#+end_src
+
+#+RESULTS:
+: 81
+
+We can also use "square" as a building block in defining other procedures.
+
+#+begin_src racket
+  (define (square x) (* x x))
+  (define (sum-of-squares x y) (+ (square x) (square y)))
+  (define (f a) (sum-of-squares (+ a 1) (* a 2)))
+
+  (f 5)
+#+end_src
+
+#+RESULTS:
+: 136
+
+Compound procedures are used exactly how primitive procedures are used. In fact, one could not tell by looking at the definition of "sum-of-squares" whether "square" was a built-in or itself is a compound procedure.
+
+*** The Substitution Model for Procedure Application
+
+To evaluate a combination whose operator names a compound procedure, the interpreter follows much the same process as for combinations whose operators name primitive procedures, i.e. evaluating the elements of the combination the applying the procedure to the arguments. Essentially, replace each formal parameter with its corresponding argument. Using an example from the previous section:
+
+#+begin_src racket
+  (f 5)
+  (sum-of-squares (+ 5 1) (* 5 2))
+  (+ (square 6) (square 10))
+  (+ (* 6 6) (* 10 10))
+  (+ 36 100)
+
+  = 136
+#+end_src
+
+This process is called the "substitution model" for procedure applications, where the "meaning" of a procedure application is determined. However, typical interpreters do not evaluate procedure applications by manipulating the text of a procedure to substitute values for the formal parameters and instead use a local environment for formal parameters. This sort of model is only for a subset of interpreters.
+
+There exists an alternative form of evaluation from what has been described. Instead of evaluating the operator and operands and then applying the resulting procedure to the resulting arguments, operand expressions are substituted for parameters until an expression involving only primitive operators is obtained, and then evaluating.
+
+#+begin_src racket
+  (f 5)
+  (sum-of-squares (+ 5 1) (* 5 2))
+  (+ (square (+ 5 1)) (square (* 5 2)))
+  (+ (* (+ 5 1) (+ 5 1)) (* (* 5 2) (* 5 2)))
+  (+ (* 6 6) (* 10 10))
+  (+ 36 100)
+
+  = 136
+#+end_src
+
+This gives the same answer as the previous evaluation model with a different process. Here some evaluations are duplicated. This alternative "fully expand then reduce" method is called "normal-order evaluation", in contrast to "evaluate the arguments then apply" method before that the interpreter actually uses called "applicative-order evaluation". Both normal-order and applicative-order evaluation provide the same value. Lisp uses applicative-order evaluation partly because of additional efficiency from avoiding repetitive expressions and because normal-order evaluation becomes much more complicated outside of models of substitution. However, normal-order can be extremely valuable at times as well.
+
+*** Conditional Expressions and Predicates
+
+"Case analysis", or conditional branching, has a special form in Lisp called "cond" ("conditional"). It is used as follows:
+
+#+begin_src racket
+  (define (abs x)
+    (cond ((> x 0) x)
+          ((= x 0) 0)
+          ((< x 0) (- x))))
+#+end_src
+
+Each top level parenthetical grouping following cond is called a "clause", with the first expression being the "predicate" that will evaluate to a boolean. The expression following its respective predicate will only be evaluated if the predicate evaluates to true. If a predicate is false, its respective expression is skipped and the next predicate is evaluated. Once a predicate is evaluated as true, the cond will only evaluate that specific expression, and if none are true, the cond has a value of undefined. "Predicate" is also used for expressions that evaluate to true or false.
+
+There exists another special form similar to cond called "if", which operates very similarly to cond. It follows the form (if <PREDICATE> <CONSEQUENT> <ALTERNATIVE>), where if <PREDICATE> is false, <ALTERNATIVE> is evaluated and returned.
+
+Several logical operators exist as special forms, including "and", "or", and "not", which evaluate if a whole list of arguments are true, if any arguments are true, or if the expression evaluates to false respectively, all returning true respectively is so, and false otherwise. 
+
+** Exercises
+
+*** Conditional Expressions and Predicates
+
+**** Exercise 1
+
+Below is a sequence of expressions.  What is the result printed by the interpreter in response to each expression? Assume that the sequence is to be evaluated in the order in which it is presented.
+
+          10
+
+          /10/
+
+          (+ 5 3 4)
+
+          /12/
+
+          (- 9 1)
+
+          /8/
+
+          (/ 6 2)
+
+          /3/
+
+          (+ (* 2 4) (- 4 6))
+
+          /6/
+
+          (define a 3)
+          (define b (+ a 1))
+          (+ a b (* a b))
+
+          /19/
+
+          (= a b)
+
+          /false/
+
+          (if (and (> b a) (< b (* a b)))
+              b
+              a)
+
+           /b/
+
+          (cond ((= a 4) 6)
+                ((= b 4) (+ 6 7 a))
+                (else 25))
+
+          /16/
+
+          (+ 2 (if (> b a) b a))
+
+          /6/
+
+          (* (cond ((> a b) a)
+                   ((< a b) b)
+                   (else -1))
+             (+ a 1))
+
+          /16/
+
+**** Exercise 2
+
+Translate the following expression into prefix form.
+
+          5 + 4 + (2 - (3 - (6 + 4/5)))
+          -----------------------------
+                 3(6 - 2)(2 - 7)
+
+#+begin_src racket
+  (/ (+ 5 4 (- 2 (- 3 (+ 6 (/ 4 5))))) (* 3 (- 6 2) (- 2 7)))
+#+end_src
+
+**** Exercise 3
+
+Define a procedure that takes three numbers as arguments and returns the sum of the squares of the two larger numbers.
+
+#+begin_src racket
+  (define (square x) (* x x))
+  (define (sum-of-squares x y) (+ (square x) (square y)))
+  (define (sum-of-squares-of-two-largest-numbers x y z)
+    (cond ((and (< x y)
+               (< x z)) (sum-of-squares y z))
+          ((and (< y x)
+               (< y z)) (sum-of-squares x z))
+          ((and (< z x)
+               (< z y)) (sum-of-squares x y))))
+
+  (sum-of-squares-of-two-largest-numbers 1 2 3)
+#+end_src
+
+#+RESULTS:
+: 13
+
+**** Exercise 4
+
+Observe that our model of evaluation allows for combinations whose operators are compound expressions.  Use this observation to describe the behavior of the following procedure:
+
+#+begin_src racket
+  (define (a-plus-abs-b a b)
+    ((if (> b 0) + -) a b))
+#+end_src
+
+This procedure will determine if the second argument "b" is positive or negative. If "b" is positive, the "+" operator is returned and adds "a" and "b". If "b" is negative, the "-" operator is returned and subtracts "b" from "a". Both evaluations result in "a" added with the absolute value of "b".
+
+**** Exercise 5
+
+Ben Bitdiddle has invented a test to determine whether the interpreter he is faced with is using applicative-order evaluation or normal-order evaluation.  He defines the following two procedures:
+
+#+begin_src racket
+  (define (p) (p))
+  (define (test x y)
+    (if (= x 0)
+        0
+        y))
+#+end_src
+
+Then he evaluates the expression
+
+#+begin_src racket
+  (test 0 (p))
+#+end_src
+
+ What behavior will Ben observe with an interpreter that uses applicative-order evaluation?  What behavior will he observe with an interpreter that uses normal-order evaluation?  Explain your answer.  (Assume that the evaluation rule for the special form `if' is the same whether the interpreter is using normal or applicative order: The predicate expression is evaluated first, and the result determines whether to evaluate the consequent or the alternative expression.)
+
+
+ 
