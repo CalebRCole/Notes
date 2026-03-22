@@ -325,6 +325,59 @@ Block structures help break large programs into tractable pieces. Block structur
 
 *** Procedures and the Processes They Generate
 
+A procedure is a pattern for the "local evolution" of a computational process. It specifies how each stage of the process is built upon the previous stage. It is very difficult to generalize making statements about the "global" behavior of a process whose local evolution has been specified by a procedure, but we can describe some typical patterns of process evolution.
+
+**** Linear Recursion and Iteration
+
+Consider the factorial function, defined by:
+
+n! = n * (n - 1) * (n - 2) ... 3 * 2 * 1
+
+There are many ways to compute factorials, such as using the observation n! is equal to n times (n-1)! for any positive integer n:
+
+n! = n * [(n - 1) * (n - 2) ... 3 * 2 * 1] = n * (n - 1)!
+
+Thus we can compute n! by computing (n - 1)! and by multiplying the result by n. If 1! = 1, then this observation translates directly into a procedure:
+
+#+begin_src racket
+  (define (factorial n)
+    (if (= n 1)
+        1
+        (* n (factorial (- n 1)))))
+#+end_src
+
+Alternatively we can look at describing a rule for computing n! by starting from the bottom and iterating:
+
+1 * 1 = 1 * 2 = 2 * 3 = 6 * 4 = 24 ... (n - 1)! * n  = n!
+
+This can also be recast as a procedure:
+
+#+begin_src racket
+  (define (factorial n)
+    (fact-ite 1 1 n))
+
+  (define (fact-iter product counter max-count)
+    (if (> counter max-count)
+        product
+        (fact-iter (* counter product)
+                   (+ counter 1)
+                   max-count)))
+#+end_src
+
+The two processes seem hardly different, computing the same function on the same domain each requiring a number of steps proportional to n to compute n! with the same sequence of multiplications, obtaining the same sequence of partial products. However, the "shapes" of the processes evolve quite differently.
+
+In the first process, the substitution model reveals a shape of expansion followed by contraction, in the form: |>
+The expansion occurs as the process builds up a chain of operations "deferred operations". The contraction occurs as the operations are actually performed. This type of process, characterized by a chain of deferred operations, is called a "recursive process". Carrying out this process requires that the interpreter keep track of the operations to be performed later on. Thus the amount of information needed to keep track of it grows linearly with n (O(n)). Such a process is called a "linear recursive process".
+
+In contrast, the second process doesn't need to grow and shrink, with each step only requiring to keep track of the current values of "product", "counter", and "max-count". This is called an "iterative process". Such a process' state can be summarized by a fixed number of "state variables", together with a fixed rule that describes how the state variables should be updated as the process moves from state to state and an )optional_ end test that specifies conditions under which the process should terminate (a base case). In computing n!, the number of steps grows linearly with n (O(n)) and is called a "linear iterative process".
+
+The contrast between the two processes can be seen in another way. The iterative case has the variables provide a complete description of the state any any point, while the recursive case has some additional "hidden" information maintained by the interpreter that indicates "where the process is" in the deferred operations. The longer the chain, the more information must be maintained.
+
+Take care not to confuse a recursive "process" with a recursive "procedure". A recursive procedure, we are referring to the syntactic fact that the procedure definition refers to the procedure itself directly or indirectly. When describing a process as following a recursive pattern, we are speaking about how the process evolves, not the syntax. Fact-iter is iterative despite being called recursive, with its state completely captured by its three variables, unlike a recursive solution that has hidden information.
+
+One confusing distinction between processes and procedures is that most common languages like C and Pascal have recursive procedures consume an amount of memory that grows with the number of procedure calls, even inside of iterative processes. In these languages, iteration can only be described with special constructs like "do", "while", "for", etc. Scheme, for example, will execute an iterative process in constant space even if described by a recursive procedure. This property is known as "tail-recursive", where iteration can be expressed using the ordinary procedure call mechanism, so that special iteration constructs are useful only as syntactic sugar.
+
+
 ** Exercises
 
 *** Conditional Expressions and Predicates
